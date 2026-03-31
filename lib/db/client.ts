@@ -1,6 +1,5 @@
 import { drizzle } from "drizzle-orm/d1";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
-import type { CloudflareEnv } from "@/lib/cloudflare-env";
 import * as schema from "@/lib/db/schema";
 
 export async function getDb() {
