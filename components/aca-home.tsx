@@ -11,6 +11,7 @@ import {
 import { CompanionPanel } from "@/components/companion-panel";
 import { NotificationPrompt } from "@/components/notification-prompt";
 import { Button, Panel, SectionTitle, Shell } from "@/components/ui";
+import { readStoredJson, writeStoredJson } from "@/lib/utils/browser-storage";
 
 type DeskState = {
   activeStep: number;
@@ -26,62 +27,33 @@ type DeskState = {
 
 const STORAGE_KEY = "aca-desk-v1";
 
-function readDeskState(): DeskState {
-  if (typeof window === "undefined") {
-    return {
-      activeStep: 1,
-      checkIn: {
-        feeling: "",
-        body: "",
-        need: "",
-        promise: ""
-      },
-      notes: {},
-      completedActions: []
-    };
-  }
-
-  try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) {
-      return {
-        activeStep: 1,
-        checkIn: {
-          feeling: "",
-          body: "",
-          need: "",
-          promise: ""
-        },
-        notes: {},
-        completedActions: []
-      };
-    }
-
-    return JSON.parse(raw) as DeskState;
-  } catch {
-    return {
-      activeStep: 1,
-      checkIn: {
-        feeling: "",
-        body: "",
-        need: "",
-        promise: ""
-      },
-      notes: {},
-      completedActions: []
-    };
-  }
-}
+const DEFAULT_DESK_STATE: DeskState = {
+  activeStep: 1,
+  checkIn: {
+    feeling: "",
+    body: "",
+    need: "",
+    promise: ""
+  },
+  notes: {},
+  completedActions: []
+};
 
 export function AcaHome() {
-  const [deskState, setDeskState] = useState<DeskState>(readDeskState);
+  const [deskState, setDeskState] = useState<DeskState>(DEFAULT_DESK_STATE);
+  const [storageReady, setStorageReady] = useState(false);
   const [search, setSearch] = useState("");
   const deferredSearch = useDeferredValue(search.trim().toLowerCase());
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(deskState));
-  }, [deskState]);
+    setDeskState(readStoredJson(STORAGE_KEY, DEFAULT_DESK_STATE));
+    setStorageReady(true);
+  }, []);
+
+  useEffect(() => {
+    if (!storageReady) return;
+    writeStoredJson(STORAGE_KEY, deskState);
+  }, [deskState, storageReady]);
 
   const selectedStep = getStepByNumber(deskState.activeStep);
 
@@ -516,4 +488,3 @@ export function AcaHome() {
     </Shell>
   );
 }
-

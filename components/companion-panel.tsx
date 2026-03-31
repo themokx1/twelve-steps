@@ -3,6 +3,7 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { ACA_QUICK_PROMPTS } from "@/lib/aca/program";
 import { Button, Panel } from "@/components/ui";
+import { readStoredJson, writeStoredJson } from "@/lib/utils/browser-storage";
 
 type ChatMessage = {
   id: string;
@@ -29,20 +30,6 @@ const INITIAL_MESSAGE: ChatMessage = {
   boundary: "Ne próbáld egyszerre az egész történetedet megoldani."
 };
 
-function readStoredMessages() {
-  if (typeof window === "undefined") return [INITIAL_MESSAGE];
-
-  try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) return [INITIAL_MESSAGE];
-
-    const parsed = JSON.parse(raw) as ChatMessage[];
-    return parsed.length > 0 ? parsed : [INITIAL_MESSAGE];
-  } catch {
-    return [INITIAL_MESSAGE];
-  }
-}
-
 export function CompanionPanel({
   stepNumber,
   stepTitle,
@@ -52,14 +39,21 @@ export function CompanionPanel({
   stepTitle: string;
   journalSnippet: string;
 }) {
-  const [messages, setMessages] = useState<ChatMessage[]>(readStoredMessages);
+  const [messages, setMessages] = useState<ChatMessage[]>([INITIAL_MESSAGE]);
+  const [storageReady, setStorageReady] = useState(false);
   const [input, setInput] = useState("");
   const [pending, setPending] = useState(false);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
-  }, [messages]);
+    const storedMessages = readStoredJson<ChatMessage[]>(STORAGE_KEY, [INITIAL_MESSAGE]);
+    setMessages(storedMessages.length > 0 ? storedMessages : [INITIAL_MESSAGE]);
+    setStorageReady(true);
+  }, []);
+
+  useEffect(() => {
+    if (!storageReady) return;
+    writeStoredJson(STORAGE_KEY, messages);
+  }, [messages, storageReady]);
 
   const conversation = useMemo(
     () => messages.map((message) => ({ role: message.role, content: message.content })),

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui";
+import { readStoredValue, removeStoredValue, writeStoredValue } from "@/lib/utils/browser-storage";
 
 declare global {
   interface BeforeInstallPromptEvent extends Event {
@@ -21,8 +22,7 @@ const DISMISS_KEY = "aca-pwa-dismissed-at";
 const DISMISS_TTL_MS = 5 * 24 * 60 * 60 * 1000;
 
 function shouldSuppressPrompt() {
-  if (typeof window === "undefined") return true;
-  const dismissedAt = Number(window.localStorage.getItem(DISMISS_KEY) ?? "0");
+  const dismissedAt = Number(readStoredValue(DISMISS_KEY) ?? "0");
   return dismissedAt > 0 && Date.now() - dismissedAt < DISMISS_TTL_MS;
 }
 
@@ -72,7 +72,7 @@ export function PwaInstallPrompt() {
     }
 
     function handleInstalled() {
-      window.localStorage.removeItem(DISMISS_KEY);
+      removeStoredValue(DISMISS_KEY);
       setVisible(false);
       setMode(null);
       setPromptEvent(null);
@@ -88,9 +88,7 @@ export function PwaInstallPrompt() {
   }, []);
 
   function dismiss() {
-    if (typeof window !== "undefined") {
-      window.localStorage.setItem(DISMISS_KEY, String(Date.now()));
-    }
+    writeStoredValue(DISMISS_KEY, String(Date.now()));
 
     setVisible(false);
     setMode(null);
@@ -151,4 +149,3 @@ export function PwaInstallPrompt() {
     </div>
   );
 }
-

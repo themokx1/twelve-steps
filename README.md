@@ -36,7 +36,7 @@ Not fully implemented yet:
 
 The schema and architecture are ready for those next steps.
 
-## Local setup
+## Local setup with `.dev.vars`
 
 1. Install dependencies:
 
@@ -44,25 +44,43 @@ The schema and architecture are ready for those next steps.
 npm install
 ```
 
-2. Create `.dev.vars`:
+2. Create the D1 database:
+
+```bash
+npx wrangler d1 create aca_twelve_steps
+```
+
+Copy the printed `database_id` and `preview_database_id` values into [wrangler.jsonc](/Users/zoltanpalotai16/PhpstormProjects/twelve-steps/wrangler.jsonc).
+
+3. Create `.dev.vars` next to `wrangler.jsonc`:
 
 ```env
 OPENAI_API_KEY=sk-...
 SESSION_HMAC_SECRET=replace-with-a-long-random-secret
 VAPID_PUBLIC_KEY=...
 VAPID_PRIVATE_KEY=...
-NOTIFICATION_SENDER_EMAIL=you@example.com
 ```
 
-3. Create a D1 database and fill the IDs in [wrangler.jsonc](/Users/zoltanpalotai16/PhpstormProjects/twelve-steps/wrangler.jsonc).
+Useful generator for `SESSION_HMAC_SECRET`:
 
-4. Apply migrations locally:
+```bash
+openssl rand -hex 32
+```
+
+Notes:
+
+- use `.dev.vars`, not `.env`, for this project
+- do not commit `.dev.vars`
+- `npm run dev` now also loads `.dev.vars`
+- `npm run preview` remains the most Cloudflare-like local validation path
+
+4. Apply local migrations:
 
 ```bash
 npx wrangler d1 migrations apply DB --local
 ```
 
-5. Run the app:
+5. Run the app locally:
 
 ```bash
 npm run dev
@@ -74,6 +92,43 @@ Production-like local runtime:
 npm run preview
 ```
 
+## Remote secrets with `wrangler secret put`
+
+1. Log in to Cloudflare:
+
+```bash
+npx wrangler login
+```
+
+2. Confirm the target account:
+
+```bash
+npx wrangler whoami
+```
+
+3. Put the required remote secrets one by one:
+
+```bash
+npx wrangler secret put OPENAI_API_KEY
+npx wrangler secret put SESSION_HMAC_SECRET
+npx wrangler secret put VAPID_PUBLIC_KEY
+npx wrangler secret put VAPID_PRIVATE_KEY
+```
+
+`NOTIFICATION_SENDER_EMAIL` is not sensitive, so it can stay in `vars` inside [wrangler.jsonc](/Users/zoltanpalotai16/PhpstormProjects/twelve-steps/wrangler.jsonc).
+
+Important:
+
+- `wrangler secret put` updates the deployed Worker secret directly
+- if later you use named Wrangler environments, add `--env <name>`
+- if you adopt gradual versions later, Cloudflare recommends `wrangler versions secret put` instead
+
+4. Deploy:
+
+```bash
+npm run deploy
+```
+
 ## Key files
 
 - [app/page.tsx](/Users/zoltanpalotai16/PhpstormProjects/twelve-steps/app/page.tsx)
@@ -83,6 +138,7 @@ npm run preview
 - [lib/ai/companion.ts](/Users/zoltanpalotai16/PhpstormProjects/twelve-steps/lib/ai/companion.ts)
 - [lib/db/schema.ts](/Users/zoltanpalotai16/PhpstormProjects/twelve-steps/lib/db/schema.ts)
 - [public/sw.js](/Users/zoltanpalotai16/PhpstormProjects/twelve-steps/public/sw.js)
+- [scripts/run-next-dev.mjs](/Users/zoltanpalotai16/PhpstormProjects/twelve-steps/scripts/run-next-dev.mjs)
 
 ## Recommended next build steps
 

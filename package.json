@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "node scripts/run-next-dev.mjs",
     "build": "next build && node scripts/ensure-opennext-manifests.mjs",
     "cf:build": "opennextjs-cloudflare build && node scripts/patch-opennext-worker.mjs",
     "cf:deploy": "opennextjs-cloudflare deploy",
@@ -47,4 +47,3 @@
     "wrangler": "^4.12.0"
   }
 }
-
