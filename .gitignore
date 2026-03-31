@@ -1,0 +1,13 @@
+.next
+.open-next
+.wrangler
+node_modules
+dist
+coverage
+playwright-report
+test-results
+.DS_Store
+.dev.vars
+cloudflare-env.d.ts
+.idea
+tsconfig.tsbuildinfo
