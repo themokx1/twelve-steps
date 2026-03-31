@@ -18,7 +18,7 @@
     "paths": {
       "@/*": ["./*"]
     },
-    "types": ["vitest/globals", "@cloudflare/workers-types"]
+    "types": ["@cloudflare/workers-types"]
   },
   "include": [
     "next-env.d.ts",
@@ -27,6 +27,10 @@
     ".next/types/**/*.ts",
     "cloudflare-env.d.ts"
   ],
-  "exclude": ["node_modules"]
+  "exclude": [
+    "node_modules",
+    "drizzle.config.ts",
+    "playwright.config.ts",
+    "tests/**/*"
+  ]
 }
-

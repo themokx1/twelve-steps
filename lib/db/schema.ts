@@ -115,6 +115,9 @@ export const meetingSessions = sqliteTable(
     needsNote: text("needs_note"),
     dailyPromise: text("daily_promise"),
     affirmationShown: text("affirmation_shown"),
+    activeStep: integer("active_step").notNull().default(1),
+    notesJson: text("notes_json").notNull().default("{}"),
+    completedActionsJson: text("completed_actions_json").notNull().default("[]"),
     createdAt: integer("created_at").notNull(),
     updatedAt: integer("updated_at").notNull()
   },
@@ -157,4 +160,3 @@ export const pushSubscriptions = sqliteTable(
     endpointUnique: uniqueIndex("push_subscriptions_endpoint_unique").on(table.endpoint)
   })
 );
-

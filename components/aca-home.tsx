@@ -1,6 +1,6 @@
 "use client";
 
-import { startTransition, useDeferredValue, useEffect, useMemo, useState } from "react";
+import { startTransition, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import {
   ACA_AFFIRMATIONS,
   ACA_MEETING_FLOW,
@@ -8,52 +8,80 @@ import {
   STEPS,
   getStepByNumber
 } from "@/lib/aca/program";
+import { type DeskState } from "@/lib/aca/state";
+import { AccountPanel } from "@/components/account-panel";
 import { CompanionPanel } from "@/components/companion-panel";
 import { NotificationPrompt } from "@/components/notification-prompt";
 import { Button, Panel, SectionTitle, Shell } from "@/components/ui";
-import { readStoredJson, writeStoredJson } from "@/lib/utils/browser-storage";
 
-type DeskState = {
-  activeStep: number;
-  checkIn: {
-    feeling: string;
-    body: string;
-    need: string;
-    promise: string;
-  };
-  notes: Record<string, string>;
-  completedActions: string[];
+type PasskeyItem = {
+  id: string;
+  name: string | null;
+  deviceType: string;
+  backedUp: boolean;
+  createdAt: number;
+  lastUsedAt: number | null;
 };
 
-const STORAGE_KEY = "aca-desk-v1";
-
-const DEFAULT_DESK_STATE: DeskState = {
-  activeStep: 1,
-  checkIn: {
-    feeling: "",
-    body: "",
-    need: "",
-    promise: ""
-  },
-  notes: {},
-  completedActions: []
-};
-
-export function AcaHome() {
-  const [deskState, setDeskState] = useState<DeskState>(DEFAULT_DESK_STATE);
-  const [storageReady, setStorageReady] = useState(false);
+export function AcaHome({
+  initialDeskState,
+  meetingDate,
+  email,
+  passkeys
+}: {
+  initialDeskState: DeskState;
+  meetingDate: string;
+  email: string;
+  passkeys: PasskeyItem[];
+}) {
+  const [deskState, setDeskState] = useState<DeskState>(initialDeskState);
   const [search, setSearch] = useState("");
+  const [saveState, setSaveState] = useState<"saved" | "saving" | "error">("saved");
+  const [saveMessage, setSaveMessage] = useState("A mai állapotod D1-ből töltődött be.");
   const deferredSearch = useDeferredValue(search.trim().toLowerCase());
+  const isFirstSync = useRef(true);
 
   useEffect(() => {
-    setDeskState(readStoredJson(STORAGE_KEY, DEFAULT_DESK_STATE));
-    setStorageReady(true);
-  }, []);
+    setDeskState(initialDeskState);
+    setSaveState("saved");
+    setSaveMessage("A mai állapotod D1-ből töltődött be.");
+  }, [initialDeskState]);
 
   useEffect(() => {
-    if (!storageReady) return;
-    writeStoredJson(STORAGE_KEY, deskState);
-  }, [deskState, storageReady]);
+    if (isFirstSync.current) {
+      isFirstSync.current = false;
+      return;
+    }
+
+    const timeout = window.setTimeout(async () => {
+      setSaveState("saving");
+      setSaveMessage("Mentem a mai munkádat D1-be...");
+
+      try {
+        const response = await fetch("/api/today", {
+          method: "POST",
+          headers: {
+            "content-type": "application/json"
+          },
+          body: JSON.stringify({
+            deskState
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error("A mentés nem sikerült.");
+        }
+
+        setSaveState("saved");
+        setSaveMessage("A mai állapotod el lett mentve D1-be.");
+      } catch {
+        setSaveState("error");
+        setSaveMessage("A mentés most nem sikerült. A változtatásaid itt maradtak a képernyőn, próbáld újra.");
+      }
+    }, 600);
+
+    return () => window.clearTimeout(timeout);
+  }, [deskState]);
 
   const selectedStep = getStepByNumber(deskState.activeStep);
 
@@ -93,8 +121,8 @@ export function AcaHome() {
       value: String(completedCount)
     },
     {
-      label: "Nyitott megerősítés",
-      value: deskState.checkIn.promise.trim() ? "1" : "0"
+      label: "Mai nap",
+      value: meetingDate
     }
   ];
 
@@ -147,9 +175,9 @@ export function AcaHome() {
                     Meleg, letisztult tér a 12 lépés megismerésére, gyakorlására és rögzítésére.
                   </h1>
                   <p className="max-w-3xl text-base leading-8 text-[#6d5a50] sm:text-lg">
-                    Nem kell kitalálnod, hogyan állj neki. A rendszer eléd teszi a napi rendet, a lépéshez
-                    tartozó kérdéseket, a kicsi gyakorlatokat és az AI társ támogatását is. Megérdemled, hogy jó
-                    történjen veled, és azt is, hogy ez az út végre átlátható és megtartó legyen.
+                    Most már bejelentkezve dolgozol: a mai becsekkolásod és jegyzeteid D1-be mentődnek, és ugyanarra
+                    a napra vissza is töltődnek. Nem kell tartanod fejben az egészet. Megérdemled, hogy jó történjen
+                    veled, és azt is, hogy ez a munka tényleg meg legyen tartva.
                   </p>
                 </div>
 
@@ -249,7 +277,10 @@ export function AcaHome() {
 
               <div className="space-y-4">
                 {ACA_MEETING_FLOW.map((item, index) => (
-                  <div key={item.title} className="grid gap-3 rounded-[24px] bg-white/70 p-4 md:grid-cols-[auto_1fr] md:items-start">
+                  <div
+                    key={item.title}
+                    className="grid gap-3 rounded-[24px] bg-white/70 p-4 md:grid-cols-[auto_1fr] md:items-start"
+                  >
                     <div className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-[#f0d7c5] font-display text-xl text-ink">
                       {index + 1}
                     </div>
@@ -443,7 +474,7 @@ export function AcaHome() {
           </div>
         </div>
 
-        <div className="space-y-6 xl:sticky xl:top-6 self-start">
+        <div className="self-start space-y-6 xl:sticky xl:top-6">
           <Panel className="space-y-4">
             <SectionTitle
               eyebrow="Mai tartás"
@@ -467,14 +498,24 @@ export function AcaHome() {
               </div>
 
               <div className="rounded-[22px] bg-[#f0dfd1] p-4">
-                <p className="text-[11px] uppercase tracking-[0.28em] text-clay/80">Szelíd figyelmeztetés</p>
-                <p className="mt-2 text-sm leading-7 text-ink">
-                  Ne akarj egyszerre túl sokat megérteni. Maradj annál az egy lépésnél, amit most tényleg meg
-                  tudsz tenni.
-                </p>
+                <p className="text-[11px] uppercase tracking-[0.28em] text-clay/80">Mentési állapot</p>
+                <p className="mt-2 text-sm leading-7 text-ink">{saveMessage}</p>
+                <span
+                  className={`mt-3 inline-flex rounded-full px-3 py-2 text-xs font-semibold ${
+                    saveState === "saved"
+                      ? "bg-[#e4f0eb] text-cedar"
+                      : saveState === "saving"
+                        ? "bg-white/80 text-ink"
+                        : "bg-[#f7d7d2] text-[#8f3f30]"
+                  }`}
+                >
+                  {saveState === "saved" ? "Elmentve" : saveState === "saving" ? "Mentés..." : "Mentési hiba"}
+                </span>
               </div>
             </div>
           </Panel>
+
+          <AccountPanel email={email} passkeys={passkeys} />
 
           <NotificationPrompt />
 

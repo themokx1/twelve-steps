@@ -1,46 +1,45 @@
 {
-  "name": "aca-twelve-steps",
-  "main": ".open-next/worker.js",
-  "compatibility_date": "2026-03-31",
-  "compatibility_flags": [
-    "nodejs_compat",
-    "global_fetch_strictly_public"
-  ],
-  "assets": {
-    "directory": ".open-next/assets",
-    "binding": "ASSETS"
-  },
+	"name": "aca-twelve-steps",
+	"main": ".open-next/worker.js",
+	"compatibility_date": "2026-03-31",
+	"compatibility_flags": [
+		"nodejs_compat",
+		"global_fetch_strictly_public"
+	],
+	"assets": {
+		"directory": ".open-next/assets",
+		"binding": "ASSETS"
+	},
   "d1_databases": [
     {
       "binding": "DB",
       "database_name": "aca_twelve_steps",
-      "database_id": "__TO_FILL__",
-      //"preview_database_id": "__TO_FILL__",
+      "database_id": "89a8d79b-9347-4355-9804-337f507cdebf",
       "migrations_dir": "migrations"
     }
   ],
-  "vars": {
-    "APP_ENV": "development",
-    "APP_URL": "http://127.0.0.1:8787",
-    "APP_NAME": "ACA Tizenkét Lépés",
-    "OPENAI_MODEL_COMPANION": "gpt-5.4-mini",
-    "OPENAI_MODEL_LIGHT": "gpt-5.4-nano",
-    "SESSION_COOKIE_NAME": "aca_twelve_steps_session",
-    "NOTIFICATION_SENDER_EMAIL": "support@example.com"
-  },
-  "observability": {
-    "enabled": false,
-    "head_sampling_rate": 1,
-    "logs": {
-      "enabled": true,
-      "head_sampling_rate": 1,
-      "persist": true,
-      "invocation_logs": true
-    },
-    "traces": {
-      "enabled": false,
-      "persist": true,
-      "head_sampling_rate": 1
-    }
-  }
+	"vars": {
+		"APP_ENV": "development",
+		"APP_URL": "http://127.0.0.1:8787",
+		"APP_NAME": "ACA Tizenkét Lépés",
+		"OPENAI_MODEL_COMPANION": "gpt-5.4-mini",
+		"OPENAI_MODEL_LIGHT": "gpt-5.4-nano",
+		"SESSION_COOKIE_NAME": "aca_twelve_steps_session",
+		"NOTIFICATION_SENDER_EMAIL": "support@example.com"
+	},
+	"observability": {
+		"enabled": false,
+		"head_sampling_rate": 1,
+		"logs": {
+			"enabled": true,
+			"head_sampling_rate": 1,
+			"persist": true,
+			"invocation_logs": true
+		},
+		"traces": {
+			"enabled": false,
+			"persist": true,
+			"head_sampling_rate": 1
+		}
+	}
 }
