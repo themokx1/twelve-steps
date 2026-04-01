@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { requireApiUser } from "@/lib/auth/api";
 import { generateCompanionReply } from "@/lib/ai/companion";
 
 const requestSchema = z.object({
@@ -19,9 +20,15 @@ const requestSchema = z.object({
 });
 
 export async function POST(request: Request) {
+  const auth = await requireApiUser();
+  if ("error" in auth) return auth.error;
+
   try {
     const body = requestSchema.parse(await request.json());
-    const reply = await generateCompanionReply(body);
+    const reply = await generateCompanionReply({
+      ...body,
+      userId: auth.session.userId
+    });
     return NextResponse.json(reply);
   } catch (error) {
     console.error("Companion route failed", error);
@@ -39,4 +46,3 @@ export async function POST(request: Request) {
     );
   }
 }
-

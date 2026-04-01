@@ -1,13 +1,13 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { and, eq, lt } from "drizzle-orm";
-import { getDb, getEnv } from "@/lib/db/client";
+import { getDb } from "@/lib/db/client";
+import { getSessionHmacSecret } from "@/lib/auth/secrets";
 import { sessions, users } from "@/lib/db/schema";
 import { createId } from "@/lib/utils/ids";
 import { daysFromNow, nowUnix } from "@/lib/utils/time";
 
 async function signSessionId(sessionId: string) {
-  const env = await getEnv();
-  return createHmac("sha256", env.SESSION_HMAC_SECRET || "aca-dev-secret").update(sessionId).digest("hex");
+  return createHmac("sha256", await getSessionHmacSecret()).update(sessionId).digest("hex");
 }
 
 export async function serializeSignedSession(sessionId: string) {
@@ -128,4 +128,3 @@ export async function purgeExpiredSessions() {
   const db = await getDb();
   await db.delete(sessions).where(lt(sessions.expiresAt, nowUnix()));
 }
-

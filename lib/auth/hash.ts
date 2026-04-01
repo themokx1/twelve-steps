@@ -1,8 +1,8 @@
 import { createHmac } from "node:crypto";
 
 const LEGACY_ITERATIONS = 310000;
-const DEFAULT_ITERATIONS = 100000;
-const MAX_NATIVE_ITERATIONS = 100000;
+const DEFAULT_ITERATIONS = 310000;
+const MAX_NATIVE_ITERATIONS = 310000;
 const KEY_LENGTH = 32;
 const HASH_LENGTH = 32;
 const HASH_SCHEME = "pbkdf2-sha256";
@@ -167,4 +167,3 @@ export async function verifyPassphrase(passphrase: string, saltHex: string, stor
     needsRehash: parsed.needsRehash
   };
 }
-

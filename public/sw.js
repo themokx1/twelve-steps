@@ -1,5 +1,6 @@
 const CACHE_NAME = "aca-twelve-steps-v1";
-const APP_SHELL = ["/", "/manifest.webmanifest", "/icon.svg", "/apple-icon.svg"];
+const APP_SHELL = ["/manifest.webmanifest", "/icon.svg", "/apple-icon.svg"];
+const STATIC_DESTINATIONS = new Set(["script", "style", "image", "font"]);
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -35,26 +36,37 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
+  if (request.mode === "navigate" || request.destination === "document") {
+    event.respondWith(
+      fetch(request).catch(
+        async () =>
+          new Response("Offline mode does not serve personalized pages from cache.", {
+            status: 503,
+            headers: {
+              "content-type": "text/plain; charset=utf-8"
+            }
+          })
+      )
+    );
+    return;
+  }
+
+  if (!STATIC_DESTINATIONS.has(request.destination)) {
+    return;
+  }
+
   event.respondWith(
     caches.match(request).then((cachedResponse) => {
       const networkResponse = fetch(request)
         .then((response) => {
-          if (
-            response.ok &&
-            (request.mode === "navigate" ||
-              request.destination === "document" ||
-              request.destination === "script" ||
-              request.destination === "style" ||
-              request.destination === "image" ||
-              request.destination === "font")
-          ) {
+          if (response.ok) {
             const cloned = response.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(request, cloned));
+            event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.put(request, cloned)));
           }
 
           return response;
         })
-        .catch(() => cachedResponse ?? caches.match("/"));
+        .catch(async () => cachedResponse || Response.error());
 
       return cachedResponse ?? networkResponse;
     })

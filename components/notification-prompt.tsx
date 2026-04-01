@@ -100,7 +100,7 @@ export function NotificationPrompt() {
 
       const serializable = subscription.toJSON() as BrowserPushSubscription;
 
-      await fetch("/api/notifications/subscribe", {
+      const subscribeResponse = await fetch("/api/notifications/subscribe", {
         method: "POST",
         headers: {
           "content-type": "application/json"
@@ -111,29 +111,37 @@ export function NotificationPrompt() {
         })
       });
 
+      if (!subscribeResponse.ok) {
+        const subscribePayload = (await subscribeResponse.json().catch(() => null)) as {
+          error?: string;
+        } | null;
+
+        throw new Error(subscribePayload?.error ?? "A push feliratkozás mentése nem sikerült.");
+      }
+
+      setSubscribed(true);
+
       const testResponse = await fetch("/api/notifications/test", {
         method: "POST",
         headers: {
           "content-type": "application/json"
-        },
-        body: JSON.stringify({
-          subscription: serializable
-        })
+        }
       });
 
-      const testPayload = (await testResponse.json()) as {
+      const testPayload = (await testResponse.json().catch(() => null)) as {
+        error?: string;
         message?: string;
         delivered?: boolean;
-      };
+      } | null;
 
-      setSubscribed(true);
       setStatus(
-        testPayload.message ||
-          (testPayload.delivered
+        testPayload?.message ||
+          (testPayload?.delivered
             ? "Az első emlékeztető úton van feléd."
             : "Feliratkoztál, de a tesztküldéshez még kell egy kis szerveroldali finomhangolás.")
       );
     } catch {
+      setSubscribed(false);
       setStatus("Az értesítések beállítása most nem sikerült. Ettől még az app használható marad.");
     } finally {
       setBusy(false);

@@ -1,5 +1,6 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { cookies, headers } from "next/headers";
+import { getSessionHmacSecret } from "@/lib/auth/secrets";
 import { getEnv } from "@/lib/db/client";
 import { nowUnix } from "@/lib/utils/time";
 
@@ -25,8 +26,7 @@ async function getCookieName() {
 }
 
 async function signState(payload: string) {
-  const env = await getEnv();
-  return createHmac("sha256", env.SESSION_HMAC_SECRET || "aca-dev-secret")
+  return createHmac("sha256", await getSessionHmacSecret())
     .update(`webauthn:${payload}`)
     .digest("hex");
 }
@@ -86,4 +86,3 @@ export async function getWebAuthnStateCookie() {
 
   return parsed;
 }
-

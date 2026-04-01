@@ -16,6 +16,7 @@ export default async function Page() {
 
   return (
     <AcaHome
+      userId={session.userId}
       initialDeskState={initialDeskState}
       meetingDate={meetingDate}
       email={session.email}

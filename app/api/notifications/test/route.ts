@@ -1,21 +1,25 @@
 import { NextResponse } from "next/server";
-import { z } from "zod";
+import { requireApiUser } from "@/lib/auth/api";
+import { getLatestPushSubscriptionForUser } from "@/lib/db/repositories/push-subscriptions";
 import { sendPushNotification } from "@/lib/push/service";
 
-const requestSchema = z.object({
-  subscription: z.object({
-    endpoint: z.string().min(1),
-    expirationTime: z.number().nullable().optional(),
-    keys: z.object({
-      p256dh: z.string().min(1),
-      auth: z.string().min(1)
-    })
-  })
-});
+export async function POST() {
+  const auth = await requireApiUser();
+  if ("error" in auth) return auth.error;
 
-export async function POST(request: Request) {
-  const body = requestSchema.parse(await request.json());
-  const result = await sendPushNotification(body.subscription, {
+  const subscription = await getLatestPushSubscriptionForUser(auth.session.userId);
+
+  if (!subscription) {
+    return NextResponse.json(
+      {
+        ok: false,
+        error: "Ehhez a fiókhoz még nincs eltárolt push feliratkozás."
+      },
+      { status: 404 }
+    );
+  }
+
+  const result = await sendPushNotification(subscription, {
     title: "ACA társ",
     body: "Itt az ideje egy kedves, de komoly visszatérésnek önmagadhoz.",
     url: "/"
@@ -31,4 +35,3 @@ export async function POST(request: Request) {
       : "A push-hoz még hiányoznak a VAPID kulcsok, de a kliensoldali engedély már megvan."
   });
 }
-

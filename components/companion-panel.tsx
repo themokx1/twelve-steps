@@ -3,7 +3,7 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { ACA_QUICK_PROMPTS } from "@/lib/aca/program";
 import { Button, Panel } from "@/components/ui";
-import { readStoredJson, writeStoredJson } from "@/lib/utils/browser-storage";
+import { readStoredJson, readStoredValue, removeStoredValue, writeStoredJson } from "@/lib/utils/browser-storage";
 
 type ChatMessage = {
   id: string;
@@ -16,7 +16,8 @@ type ChatMessage = {
   boundary?: string;
 };
 
-const STORAGE_KEY = "aca-companion-thread-v1";
+const LEGACY_STORAGE_KEY = "aca-companion-thread-v1";
+const STORAGE_KEY_PREFIX = "aca-companion-thread-v2";
 
 const INITIAL_MESSAGE: ChatMessage = {
   id: "initial",
@@ -31,10 +32,12 @@ const INITIAL_MESSAGE: ChatMessage = {
 };
 
 export function CompanionPanel({
+  userId,
   stepNumber,
   stepTitle,
   journalSnippet
 }: {
+  userId: string;
   stepNumber: number;
   stepTitle: string;
   journalSnippet: string;
@@ -43,17 +46,30 @@ export function CompanionPanel({
   const [storageReady, setStorageReady] = useState(false);
   const [input, setInput] = useState("");
   const [pending, setPending] = useState(false);
+  const storageKey = `${STORAGE_KEY_PREFIX}:${userId}`;
 
   useEffect(() => {
-    const storedMessages = readStoredJson<ChatMessage[]>(STORAGE_KEY, [INITIAL_MESSAGE]);
-    setMessages(storedMessages.length > 0 ? storedMessages : [INITIAL_MESSAGE]);
+    setStorageReady(false);
+
+    const storedMessages = readStoredJson<ChatMessage[]>(storageKey, []);
+    const legacyMessages = readStoredJson<ChatMessage[]>(LEGACY_STORAGE_KEY, []);
+    const resolvedMessages =
+      storedMessages.length > 0 ? storedMessages : legacyMessages.length > 0 ? legacyMessages : [INITIAL_MESSAGE];
+
+    setMessages(resolvedMessages);
+
+    if (readStoredValue(storageKey) === null && legacyMessages.length > 0) {
+      writeStoredJson(storageKey, resolvedMessages);
+      removeStoredValue(LEGACY_STORAGE_KEY);
+    }
+
     setStorageReady(true);
-  }, []);
+  }, [storageKey]);
 
   useEffect(() => {
     if (!storageReady) return;
-    writeStoredJson(STORAGE_KEY, messages);
-  }, [messages, storageReady]);
+    writeStoredJson(storageKey, messages);
+  }, [messages, storageKey, storageReady]);
 
   const conversation = useMemo(
     () => messages.map((message) => ({ role: message.role, content: message.content })),
@@ -90,6 +106,10 @@ export function CompanionPanel({
           conversation: nextConversation
         })
       });
+
+      if (!response.ok) {
+        throw new Error("A companion válasz most nem érhető el.");
+      }
 
       const data = (await response.json()) as {
         toneLabel: string;

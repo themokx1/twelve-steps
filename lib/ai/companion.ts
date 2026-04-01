@@ -29,12 +29,14 @@ const companionJsonSchema = {
 export type CompanionReply = z.infer<typeof companionResponseSchema>;
 
 export async function generateCompanionReply({
+  userId,
   message,
   stepNumber,
   stepTitle,
   journalSnippet,
   conversation
 }: {
+  userId?: string | null;
   message: string;
   stepNumber?: number;
   stepTitle?: string;
@@ -48,6 +50,7 @@ export async function generateCompanionReply({
   if (!env.OPENAI_API_KEY) {
     const fallback = createFallbackReply({ message, stepTitle });
     await safeLogAiRun({
+      userId,
       kind: "aca_companion",
       model,
       inputExcerpt,
@@ -98,6 +101,7 @@ export async function generateCompanionReply({
     const parsed = companionResponseSchema.parse(JSON.parse(outputText));
 
     await safeLogAiRun({
+      userId,
       kind: "aca_companion",
       model,
       inputExcerpt,
@@ -110,6 +114,7 @@ export async function generateCompanionReply({
     const fallback = createFallbackReply({ message, stepTitle });
 
     await safeLogAiRun({
+      userId,
       kind: "aca_companion",
       model,
       inputExcerpt,
@@ -165,4 +170,3 @@ function createFallbackReply({
     boundary: "Ne nyiss új témát, amíg ezt az egy gondolatot végig nem írtad."
   };
 }
-

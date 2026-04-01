@@ -24,11 +24,13 @@ type PasskeyItem = {
 };
 
 export function AcaHome({
+  userId,
   initialDeskState,
   meetingDate,
   email,
   passkeys
 }: {
+  userId: string;
   initialDeskState: DeskState;
   meetingDate: string;
   email: string;
@@ -520,6 +522,7 @@ export function AcaHome({
           <NotificationPrompt />
 
           <CompanionPanel
+            userId={userId}
             stepNumber={selectedStep.number}
             stepTitle={selectedStep.title}
             journalSnippet={[deskState.checkIn.feeling, deskState.checkIn.need, journalText].filter(Boolean).join("\n")}

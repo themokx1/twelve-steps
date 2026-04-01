@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { safeUpsertPushSubscription } from "@/lib/db/repositories/journey";
+import { requireApiUser } from "@/lib/auth/api";
+import { upsertPushSubscription } from "@/lib/db/repositories/push-subscriptions";
 
 const subscriptionSchema = z.object({
   subscription: z.object({
@@ -15,9 +16,13 @@ const subscriptionSchema = z.object({
 });
 
 export async function POST(request: Request) {
+  const auth = await requireApiUser();
+  if ("error" in auth) return auth.error;
+
   const payload = subscriptionSchema.parse(await request.json());
 
-  await safeUpsertPushSubscription({
+  await upsertPushSubscription({
+    userId: auth.session.userId,
     endpoint: payload.subscription.endpoint,
     keysJson: JSON.stringify(payload.subscription.keys),
     locale: payload.locale ?? null,
@@ -28,4 +33,3 @@ export async function POST(request: Request) {
     ok: true
   });
 }
-
