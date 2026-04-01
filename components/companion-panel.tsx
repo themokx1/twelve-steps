@@ -159,7 +159,7 @@ export function CompanionPanel({
   }
 
   return (
-    <Panel className="space-y-5">
+    <Panel className="space-y-6 lg:min-h-[34rem]">
       <div className="space-y-2">
         <p className="text-[11px] uppercase tracking-[0.32em] text-clay/80">AI társ</p>
         <h3 className="font-display text-[1.7rem] leading-tight text-ink">Empatikus, de fegyelmezett kísérés</h3>
@@ -168,7 +168,7 @@ export function CompanionPanel({
         </p>
       </div>
 
-      <div className="grid gap-2">
+      <div className="grid gap-2 md:grid-cols-2">
         {ACA_QUICK_PROMPTS.map((prompt) => (
           <button
             key={prompt}
@@ -181,7 +181,7 @@ export function CompanionPanel({
         ))}
       </div>
 
-      <div className="max-h-[30rem] space-y-3 overflow-y-auto pr-1">
+      <div className="max-h-[34rem] space-y-3 overflow-y-auto pr-1 xl:max-h-[42rem]">
         {messages.map((message) => (
           <div
             key={message.id}
@@ -221,7 +221,7 @@ export function CompanionPanel({
 
       <form className="space-y-3" onSubmit={handleSubmit}>
         <textarea
-          rows={4}
+          rows={5}
           value={input}
           onChange={(event) => setInput(event.target.value)}
           placeholder={`Mi történik most benned a(z) ${stepTitle.toLowerCase()} körül?`}

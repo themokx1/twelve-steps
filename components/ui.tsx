@@ -14,7 +14,7 @@ export function Shell({
 }) {
   return (
     <main className={cn("min-h-screen bg-aurora", className)}>
-      <div className="mx-auto min-h-screen w-full max-w-[1500px] px-4 py-4 sm:px-6 sm:py-6 lg:px-10">
+      <div className="min-h-screen w-full px-4 py-4 sm:px-6 sm:py-6 lg:px-8 xl:px-10 2xl:px-14">
         {children}
       </div>
     </main>
@@ -31,7 +31,7 @@ export function Panel({
   return (
     <section
       className={cn(
-        "rounded-[28px] border border-[rgba(80,53,38,0.1)] bg-[rgba(255,251,246,0.74)] p-5 shadow-card backdrop-blur md:p-6",
+        "rounded-[30px] border border-[rgba(80,53,38,0.1)] bg-[rgba(255,251,246,0.74)] p-5 shadow-card backdrop-blur md:p-7 xl:p-8",
         className
       )}
     >
@@ -85,4 +85,3 @@ export function SectionTitle({
     </div>
   );
 }
-
