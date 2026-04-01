@@ -8,6 +8,7 @@ export default defineConfig({
   use: {
     baseURL: "http://127.0.0.1:8787",
     locale: "hu-HU",
+    serviceWorkers: "block",
     extraHTTPHeaders: {
       "accept-language": "hu-HU,hu;q=0.9"
     },
@@ -30,4 +31,3 @@ export default defineConfig({
     timeout: 180000
   }
 });
-
